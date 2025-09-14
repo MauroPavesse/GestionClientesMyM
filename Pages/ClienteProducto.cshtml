@@ -1,0 +1,84 @@
+﻿@page "{id}"
+@model ClienteProductoModel
+@{
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Versión</th>
+            <th>Fecha Instalación</th>
+            <th>Importe</th>
+            <th>Próximo Pago</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.ClientesProductos.Count; i++)
+        {
+            var clienteProducto = Model.ClientesProductos[i];
+            <tr>
+                <td>@clienteProducto.Producto</td>
+                <td>@clienteProducto.Version</td>
+                <td>@clienteProducto.FechaInstalacion.ToShortDateString()</td>
+                <td>@clienteProducto.Importe.ToString("C")</td>
+                <td>@clienteProducto.FechaProximaPago.ToShortDateString()</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="toggleDetalles(@i)" title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                    </button>
+
+                    <a asp-page="Pagos" asp-route-id="@clienteProducto.Id" class="btn btn-primary btn-sm" title="Pagos">
+                        <i class="bi bi-coin"></i>
+                    </a>
+
+                    <a asp-page="ClienteProductoABM" asp-route-id="@clienteProducto.Id" class="btn btn-primary btn-sm" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+
+                    <form method="post" asp-page-handler="DeleteClienteProducto" class="d-inline">
+                        <input type="hidden" name="id" value="@clienteProducto.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="detalles-@i" style="display:none;">
+                <td colspan="6">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detalle in clienteProducto.Detalles)
+                            {
+                                <tr>
+                                    <td>@detalle.Descripcion</td>
+                                    <td>@detalle.Costo</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-success mb-2" asp-page="ClienteProductoABM">Agregar</a>
+
+<script>
+    function toggleDetalles(index) {
+        var fila = document.getElementById("detalles-" + index);
+        if (fila.style.display === "none") {
+            fila.style.display = "table-row";
+        } else {
+            fila.style.display = "none";
+        }
+    }
+</script>

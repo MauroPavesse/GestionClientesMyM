@@ -1,0 +1,38 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h2>Clientes</h2>
+
+<a class="btn btn-success mb-2" asp-page="ClienteABM">Agregar Cliente</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Empresa</th>
+            <th>Persona</th>
+            <th>Contacto</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var cliente in Model.Clientes)
+    {
+        <tr>
+            <td>@cliente.Empresa</td>
+            <td>@cliente.Persona</td>
+            <td>@cliente.Contacto</td>
+            <td>
+                <a asp-page="ClienteProducto" asp-route-id="@cliente.Id" class="btn btn-info btn-sm" title="Ver Productos">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a asp-page="ClienteABM" asp-route-id="@cliente.Id" class="btn btn-primary btn-sm" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,206 @@
+﻿@page "{id?}"
+@model GestionClientesMyM.Pages.ClienteProductoABMModel
+@{
+}
+
+<form method="post">
+    <input type="hidden" asp-for="ClienteProducto.Id" />
+
+    <div class="form-group">
+        <label>Empresa</label>
+        <select asp-for="ClienteProducto.ClienteId" asp-items="Model.Clientes" class="form-control">
+            <option value="">Seleccione una empresa</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Producto</label>
+        <select id="productoSelect" asp-for="ClienteProducto.ProductoId" asp-items="Model.Productos" class="form-control">
+            <option value="">Seleccione un producto</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Versión</label>
+        <select id="versionSelect" asp-for="ClienteProducto.ProductoVersionId" asp-items="Model.Versiones" class="form-control">
+            <option value="">Seleccione una versión</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha instalación</label>
+        <input asp-for="ClienteProducto.FechaInstalacion" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label>Meses gratis</label>
+        <input asp-for="ClienteProducto.MesGratis" class="form-control" type="number" />
+    </div>
+    <div class="form-group">
+        <label>Fecha próximo pago</label>
+        <input asp-for="ClienteProducto.FechaProximoPago" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label>Extras</label>
+        <div class="input-group">
+            <select id="extrasSelect" class="form-control">
+                <option value="">Seleccione un extra</option>
+                @foreach (var extra in Model.Extras)
+                {
+                    <option value="@extra.Value">@extra.Text</option>
+                }
+            </select>
+            <div class="input-group-append">
+                <button type="button" id="agregarExtraBtn" class="btn btn-primary">Agregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de extras agregados -->
+    <div class="mb-2">
+        <ul id="listaExtrasSeleccionados" class="list-group mt-2">
+        </ul>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        @(Model.EsEdicion ? "Guardar Cambios" : "Crear")
+    </button>
+    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const productoSelect = document.getElementById("productoSelect");
+            const versionSelect = document.getElementById("versionSelect");
+            const fechaInstalacionInput = document.querySelector("[name='ClienteProducto.FechaInstalacion']");
+            const mesesGratisInput = document.querySelector("[name='ClienteProducto.MesGratis']");
+            const fechaProximoPagoInput = document.querySelector("[name='ClienteProducto.FechaProximoPago']");
+
+            const extrasSelect = document.getElementById("extrasSelect");
+            const agregarExtraBtn = document.getElementById("agregarExtraBtn");
+            const listaExtras = document.getElementById("listaExtrasSeleccionados");
+
+            const extrasAgregados = new Set(); // Para evitar duplicados
+
+            agregarExtraBtn.addEventListener("click", function () {
+                const selectedOption = extrasSelect.options[extrasSelect.selectedIndex];
+
+                if (!selectedOption.value || extrasAgregados.has(selectedOption.value)) return;
+
+                extrasAgregados.add(selectedOption.value);
+
+                // Crear item visual
+                const li = document.createElement("li");
+                li.className = "list-group-item d-flex justify-content-between align-items-center";
+                li.textContent = selectedOption.textContent;
+
+                // Botón eliminar
+                const btnEliminar = document.createElement("button");
+                btnEliminar.className = "btn btn-sm btn-danger";
+                btnEliminar.textContent = "Quitar";
+                btnEliminar.addEventListener("click", function () {
+                    listaExtras.removeChild(li);
+                    extrasAgregados.delete(selectedOption.value);
+                    hiddenInput.remove();
+                });
+
+                li.appendChild(btnEliminar);
+
+                // Input oculto
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = "ExtrasSeleccionadosIds"; // Debe coincidir con el nombre del campo en el modelo
+                hiddenInput.value = selectedOption.value;
+
+                // Agregar elementos
+                listaExtras.appendChild(li);
+                listaExtras.appendChild(hiddenInput);
+            });
+
+            productoSelect.addEventListener("change", function () {
+                const productoId = this.value;
+
+                // Limpia las versiones actuales
+                versionSelect.innerHTML = '<option value="">Cargando...</option>';
+
+                if (productoId) {
+                    fetch(`/ClienteProductoABM/Edit?handler=VersionesPorProducto&productoId=${productoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            versionSelect.innerHTML = '<option value="">Seleccione una versión</option>';
+                            data.forEach(v => {
+                                const option = document.createElement("option");
+                                option.value = v.id;
+                                option.textContent = v.nombre;
+                                versionSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error("Error al cargar versiones:", error);
+                            versionSelect.innerHTML = '<option value="">Error al cargar versiones</option>';
+                        });
+                } else {
+                    versionSelect.innerHTML = '<option value="">Seleccione un producto primero</option>';
+                }
+            });
+
+            function actualizarFechaProximoPago() {
+                const fechaInstalacion = new Date(fechaInstalacionInput.value);
+                const mesesGratis = parseInt(mesesGratisInput.value);
+
+                if (!isNaN(fechaInstalacion.getTime()) && !isNaN(mesesGratis)) {
+                    const nuevaFecha = new Date(fechaInstalacion);
+                    nuevaFecha.setMonth(nuevaFecha.getMonth() + mesesGratis);
+                    fechaProximoPagoInput.value = nuevaFecha.toISOString().split('T')[0]; // yyyy-MM-dd
+                }
+            }
+
+            mesesGratisInput.addEventListener("input", actualizarFechaProximoPago);
+            fechaInstalacionInput.addEventListener("change", actualizarFechaProximoPago);
+
+                    // Extras precargados en edición
+        const extrasPreseleccionados = [
+        @foreach (var extraId in Model.ExtrasSeleccionadosIds)
+        {
+            var extraText = Model.Extras.FirstOrDefault(e => e.Value == extraId.ToString())?.Text;
+            if (!string.IsNullOrEmpty(extraText))
+            {
+                <text>{ value: "@extraId", text: "@extraText" },</text>
+            }
+        }
+        ];
+
+        extrasPreseleccionados.forEach(extra => {
+            if (extrasAgregados.has(extra.value)) return;
+
+            extrasAgregados.add(extra.value);
+
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.textContent = extra.text;
+
+            const btnEliminar = document.createElement("button");
+            btnEliminar.className = "btn btn-sm btn-danger";
+            btnEliminar.textContent = "Quitar";
+            btnEliminar.addEventListener("click", function () {
+                listaExtras.removeChild(li);
+                extrasAgregados.delete(extra.value);
+                hiddenInput.remove();
+            });
+
+            li.appendChild(btnEliminar);
+
+            const hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.name = "ExtrasSeleccionadosIds";
+            hiddenInput.value = extra.value;
+
+            listaExtras.appendChild(li);
+            listaExtras.appendChild(hiddenInput);
+        });
+
+        });
+    </script>
+}

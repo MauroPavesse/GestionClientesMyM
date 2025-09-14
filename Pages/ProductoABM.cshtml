@@ -1,0 +1,132 @@
+﻿@page "{id?}"
+@model GestionClientesMyM.Pages.ProductoABMModel
+@{
+}
+
+<form method="post">
+	<input type="hidden" asp-for="Producto.Id" />
+
+    <div class="form-group">
+        <label>Nombre</label>
+        <input asp-for="Producto.Nombre" class="form-control" type="text" />
+    </div>
+    <div class="form-group">
+        <label>Descripcion</label>
+        <input asp-for="Producto.Descripcion" class="form-control" type="text" />
+    </div>
+    <div class="form-group">
+        <label>Precio inicial</label>
+        <input asp-for="Producto.PrecioInicial" class="form-control" type="number" />
+    </div>
+
+    <div class="mt-2">
+        <button type="submit" class="btn btn-success">
+            @(Model.EsEdicion ? "Guardar Cambios" : "Crear")
+        </button>
+        <a asp-page="Producto" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+@if (Model.EsEdicion) {
+    <button class="btn btn-primary mt-3 mb-2" data-toggle="modal" data-target="#versionModal">
+        Agregar version
+    </button>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Version</th>
+                <th>Descripcion</th>
+                <th>Costo inicial</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var version in Model.Producto.ProductosVersiones)
+            {
+                <tr>
+                    <td>@version.Nombre</td>
+                    <td>@version.Descripcion</td>
+                    <td>@version.CostoInicial.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#versionModal"
+                                data-id="@version.Id"
+                                data-nombre="@version.Nombre"
+                                data-descripcion="@version.Descripcion"
+                                data-costoinicial="@version.CostoInicial.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="post" asp-page-handler="DeleteProductoVersion" class="d-inline">
+                            <input type="hidden" name="id" value="@version.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="modal fade" id="versionModal" tabindex="-1" role="dialog" aria-labelledby="versionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="versionModalLabel">@(!Model.EsEdicionModal ? "Agregar Version" : "Editar Version")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" id="modalForm" asp-page-handler="SaveProductoVersion">
+                <div class="modal-body">
+                    <input type="hidden" id="modalId" name="ProductoVersion.Id" />
+                    <input type="hidden" name="ProductoVersion.ProductoId" value="@Model.Producto.Id" />
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" class="form-control" id="modalNombre" name="ProductoVersion.Nombre" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Descripcion</label>
+                        <input type="text" class="form-control" id="modalDescripcion" name="ProductoVersion.Descripcion" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Costo inicial</label>
+                        <input type="number" class="form-control" id="modalCostoInicial" name="ProductoVersion.CostoInicial" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">@(!Model.EsEdicionModal ? "Crear" : "Guardar Cambios")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Abre el modal para editar un producto
+        $('#versionModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Botón que disparó el modal
+            var modal = $(this);
+
+            // Si el botón tiene datos, es porque estamos editando
+            if (button.data('id')) {
+                modal.find('#modalId').val(button.data('id'));
+                modal.find('#modalNombre').val(button.data('nombre'));
+                modal.find('#modalDescripcion').val(button.data('descripcion'));
+                modal.find('#modalCostoInicial').val(button.data('costoinicial'));
+
+                // Indicar que es edición
+                modal.find('.modal-title').text('Editar Version');
+            } else {
+                // Limpiar el formulario para nueva creación
+                modal.find('form')[0].reset();
+                modal.find('.modal-title').text('Agregar Version');
+            }
+        });
+    </script>
+}

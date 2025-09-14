@@ -1,0 +1,105 @@
+﻿@page "{id?}"
+@model GestionClientesMyM.Pages.PagosModel
+@{
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Fecha de pago</th>
+            <th>Importe pagado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pago in Model.Pagos)
+        {
+            <tr>
+                <td>@pago.FechaPago.ToString("dd/MM/yyyy")</td>
+                <td>@pago.ImportePagado.ToString("C")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#pagoModal"
+                            data-id="@pago.Id"
+                            data-cliente-producto-id="@pago.ClienteProductoId"
+                            data-fecha="@pago.FechaPago.ToString("yyyy-MM-dd")"
+                            data-importe="@pago.ImportePagado.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <form method="post" asp-page-handler="DeletePago" class="d-inline">
+                        <input type="hidden" name="id" value="@pago.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="pagoModal" tabindex="-1" role="dialog" aria-labelledby="pagoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pagoModalLabel">@(!Model.EsEdicionModal ? "Agregar Pago" : "Editar Pago")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" id="modalForm" asp-page-handler="SavePago">
+                <div class="modal-body">
+                    <input type="hidden" id="pagoId" name="Pago.Id" />
+                    <input type="hidden" id="pagoClienteProductoId" name="Pago.ClienteProductoId" value="@Model.Pago.ClienteProductoId" />
+
+                    <div class="form-group">
+                        <label>Fecha de pago</label>
+                        <input asp-for="Pago.FechaPago" class="form-control" type="date" id="pagoFecha" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Importe pagado</label>
+                        <input asp-for="Pago.ImportePagado" class="form-control" type="number" id="pagoImporte" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        @(!Model.EsEdicionModal ? "Crear" : "Guardar Cambios")
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-success mt-3" data-toggle="modal" data-target="#pagoModal">
+    Agregar pago
+</button>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $('#pagoModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var modal = $(this);
+
+            if (button.data('id')) {
+                modal.find('#pagoId').val(button.data('id'));
+                modal.find('#pagoClienteProductoId').val(button.data('cliente-producto-id'));
+                modal.find('#pagoFecha').val(button.data('fecha'));
+                modal.find('#pagoImporte').val(button.data('importe'));
+
+                modal.find('.modal-title').text('Editar Pago');
+            } else {
+                modal.find('#pagoId').val('');
+                modal.find('#pagoClienteProductoId').val('@Model.Pago.ClienteProductoId');
+                modal.find('#pagoFecha').val('');
+                modal.find('#pagoImporte').val('');
+                modal.find('.modal-title').text('Agregar Pago');
+            }
+        });
+    </script>
+}

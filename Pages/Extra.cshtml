@@ -1,0 +1,106 @@
+﻿@page
+@model GestionClientesMyM.Pages.ExtraModel
+@{
+}
+
+<button class="btn btn-primary mt-3 mb-2" data-toggle="modal" data-target="#extraModal">
+    Agregar extra
+</button>
+
+<table class="table table-bordered">
+	<thead>
+		<tr>
+			<th>Extra</th>
+			<th>Descripcion</th>
+			<th>Valor</th>
+			<th>Acciones</th>
+		</tr>
+	</thead>
+	<tbody>
+		@for (int i = 0; i < Model.Extras.Count; i++)
+		{
+			var extra = Model.Extras[i];
+			<tr>
+				<td>@extra.Nombre</td>
+				<td>@extra.Descripcion</td>
+				<td>@extra.Valor.ToString("C")</td>
+				<td>
+                    <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#extraModal"
+                            data-id="@extra.Id"
+                            data-nombre="@extra.Nombre"
+                            data-descripcion="@extra.Descripcion"
+                            data-valor="@extra.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <form method="post" asp-page-handler="DeleteExtra" class="d-inline">
+                        <input type="hidden" name="id" value="@extra.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<div class="modal fade" id="extraModal" tabindex="-1" role="dialog" aria-labelledby="extraModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extraModalLabel">@(!Model.EsEdicionModal ? "Agregar Extra" : "Editar Extra")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" id="modalForm" asp-page-handler="SaveExtra">
+                <div class="modal-body">
+                    <input type="hidden" id="modalId" name="Extra.Id" />
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" class="form-control" id="modalNombre" name="Extra.Nombre" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Descripcion</label>
+                        <input type="text" class="form-control" id="modalDescripcion" name="Extra.Descripcion" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Valor</label>
+                        <input type="number" class="form-control" id="modalValor" name="Extra.Valor" step="0.01" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">@(!Model.EsEdicionModal ? "Crear" : "Guardar Cambios")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Abre el modal para editar un producto
+        $('#extraModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Botón que disparó el modal
+            var modal = $(this);
+
+            // Si el botón tiene datos, es porque estamos editando
+            if (button.data('id')) {
+                modal.find('#modalId').val(button.data('id'));
+                modal.find('#modalNombre').val(button.data('nombre'));
+                modal.find('#modalDescripcion').val(button.data('descripcion'));
+                modal.find('#modalValor').val(button.data('valor'));
+
+                // Indicar que es edición
+                modal.find('.modal-title').text('Editar Extra');
+            } else {
+                // Limpiar el formulario para nueva creación
+                modal.find('form')[0].reset();
+                modal.find('.modal-title').text('Agregar Extra');
+            }
+        });
+    </script>
+}
