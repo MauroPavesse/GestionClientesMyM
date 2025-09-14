@@ -1,4 +1,6 @@
-﻿namespace GestionClientesMyM.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GestionClientesMyM.Models
 {
     public class ClienteProducto
     {
@@ -9,6 +11,7 @@
         public Producto? Producto { get; set; }
         public int ProductoVersionId { get; set; }
         public ProductoVersion? ProductoVersion { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Importe { get; set; }
         public DateTime FechaInstalacion { get; set; }
         public int MesGratis { get; set; }
